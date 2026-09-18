@@ -23,6 +23,7 @@ FIXTURES = {
     "builder":         FIXTURES_DIR / "builder-session.jsonl",
     "arch_then_build": FIXTURES_DIR / "architect-then-builder.jsonl",
     "build_then_arch": FIXTURES_DIR / "builder-then-architect.jsonl",
+    "bash_only":       FIXTURES_DIR / "bash-only-session.jsonl",
 }
 
 
@@ -175,3 +176,18 @@ class TestEdgeCases:
             '\n'
         )
         assert len(SessionTranscript(str(f)).events) == 1
+
+
+# ---------------------------------------------------------------------------
+# Bash tool_use commands (regression: file paths read via Bash, not
+# Read/Edit/Write/Grep/Glob, were invisible to bank-pattern matching)
+# ---------------------------------------------------------------------------
+
+class TestBashCommandMatching:
+    def test_path_inside_bash_command_matches(self):
+        pats = [re.compile(r"modes/world-adoption/memory/context\.md")]
+        assert SessionTranscript(str(FIXTURES["bash_only"])).matched_any(pats) is True
+
+    def test_unrelated_pattern_still_misses(self):
+        pats = [re.compile(r"NEVER_APPEARS_XYZ")]
+        assert SessionTranscript(str(FIXTURES["bash_only"])).matched_any(pats) is False

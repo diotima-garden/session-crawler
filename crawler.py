@@ -52,6 +52,14 @@ def _candidate_strings(ev):
                         val = tool_input.get(key, "")
                         if isinstance(val, str):
                             yield val
+                    # Bash carries paths in `command`, not file_path/path/pattern —
+                    # without this, any session that reads/writes files via Bash
+                    # (cat, heredocs, sed) instead of Read/Edit/Write/Grep/Glob is
+                    # invisible to bank-pattern matching.
+                    if block.get("name") == "Bash":
+                        cmd = tool_input.get("command", "")
+                        if isinstance(cmd, str):
+                            yield cmd
 
 
 def _detect_mode_from_events(events):
